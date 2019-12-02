@@ -89,6 +89,7 @@ void fuzzyInit() {
   fz_speed->addFuzzySet(lambat);
   fuzzy->addFuzzyOutput(fz_speed);
 
+
   // fuzzy rule
   fuzzy->addFuzzyRule(
       createNewFuzzyRule(1, rendah, vol_sedikit, normal));
@@ -139,4 +140,90 @@ void setup() {
 
 void loop() {
  processFuzzySystem();
+}
+
+void processFuzzySystem(){
+  int US1 = ultrasonic1.ping_cm();
+  int US2 = ultrasonic2.ping_cm();
+  int US3 = ultrasonic3.ping_cm();
+  int US4 = ultrasonic4.ping_cm();
+ 
+// Nilai 25 merupakan nilai perkiraan jarak permukaan air pada gallon terhadap batas atas gallon tempat sensor ultrasonic 3 dan sensor ultrasonic 4 diletakkan. Untuk jenis gallon yang berbeda silahkan disesuaikan
+  float jarak = 25 - US1;
+  float jarak2 = 25 - US2;
+  float durx = 0.0;
+  float a;
+          if (US3 >= 1 && US3 <= 5){
+            a = 12.0;
+          }
+          else if(US4 >= 1 && US4 <= 5){             //logika atau US3 = 0
+            a = 6.0;
+          }
+          else{
+            a = 0.0;
+          }
+          float nilaiheight = a;
+          float nilaivol = jarak2;
+          
+          fuzzyProcessInput(nilaiheight,
+                            nilaivol,&durx);
+          pos = 0;    
+          int durasi = durx;
+        
+//Untuk monitoring hasil pembacaan sensor melalui serial monitor  
+    Serial.println("");
+    Serial.print("Sensor 1 = ");
+    Serial.println(US1);
+    Serial.print("Sensor 2 = ");
+    Serial.println(US2);
+    Serial.print("Sensor 3 = ");
+    Serial.println(US3);
+    Serial.print("Sensor 4 = ");
+    Serial.println(US4);              
+    Serial.print("Tinggi Gelas = ");
+    Serial.println(nilaiheight);  
+    Serial.print("Tinggi Air Galon = ");
+    Serial.println(jarak2);  
+              
+    Serial.println("");               
+    Serial.println("Evaluation Rule");
+    Serial.print("Tinggi Gelas ");
+    Serial.print(rendah->getPertinence());
+    Serial.print(", ");
+    Serial.print(sedang->getPertinence());
+    Serial.print(", ");
+    Serial.println(tinggi->getPertinence());      
+    Serial.print("Tinggi Air Galon ");
+    Serial.print(vol_sedikit->getPertinence());
+    Serial.print(", ");
+    Serial.print(vol_medium->getPertinence());
+    Serial.print(", ");
+    Serial.println(vol_banyak->getPertinence());
+
+    Serial.println("");
+    Serial.println("Defuzifikasi");
+    Serial.print("Duration = ");
+    Serial.println(durasi);
+    
+  if ((nilaiheight >= 6.0) && (nilaivol >= 1.0)) {
+     for(pos = 0; pos < 90; pos += 1)  
+         {
+         myservo.write(pos);  
+         delay(10);                   
+         }   
+         myservo.write(90);
+         delay(durasi);
+          
+     for(pos = 90; pos>=1; pos-=1)  
+         {                       
+         myservo.write(pos);                 
+         delay(10);                      
+         }
+         myservo.write(0);
+         delay(3000); 
+  } else {
+         myservo.write(0);     
+         }
+
+         delay(1000);                                       
 }
